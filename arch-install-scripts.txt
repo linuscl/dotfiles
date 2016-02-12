@@ -1,0 +1,61 @@
+Arch Install Scripts
+
+    Vom Installationsmedium booten
+
+            loadkeys de-latin1 (für Umlaute), loadkeys de_CH-latin1 (Schweiz)
+            Es stehen vi und nano als Editoren zur Verfügung. Bei Bedarf können auch andere in die Live-CD-Umgebung installiert werden (Internetzugriff muss eingerichtet sein, pacman -Sy , pacman -S vim oder pacman -S mc).
+
+    Festplatten partitionieren
+
+            Mit fdisk, parted, cfdisk, gdisk et cetera
+            Virtuelle Blockgeräte wie LVM, LUKS, RAID et cetera einrichten
+
+    Dateisysteme anlegen
+
+            mkfs des jeweiligen Dateisystems ausführen
+
+    Partitionen einhängen
+
+            Root-Partition nach /mnt einhängen
+            Für weitere Partitionen unterhalb /mnt-Verzeichnis anlegen und entsprechend einhängen (bspw. /mnt/boot)
+            Swap-Partition einhängen (mkswap /dev/sdxY, swapon /dev/sdxY})
+
+    Internet-Zugriff einrichten
+
+            Ethernet über dhcp:
+                Sollte automatisch beim Booten ausgeführt worden sein. Falls nicht, reicht es in der Regel, dhcpcd auszuführen.
+            WLAN, DSL:
+                Manuelle Konfiguration über wpa_supplicant, rp-pppoe oder über netctl-Profile
+            Ein: ping -c3 archlinux.de muss Antwortpakete liefern.
+
+    Das Basissystem einrichten
+
+            pacstrap /mnt base base-devel [weitere Pakete...]
+                Hier auch an den gewünschten Editor denken, den man später im chroot verwenden möchte.
+                Vorsicht WLAN-Nutzer: Die Pakete wpa_supplicant und wireless_tools sind nicht in base enthalten und müssen hier also explizit mitinstalliert werden, obwohl sie im Installationssystem vorhanden sind.
+
+    System einrichten
+
+            fstab generieren: genfstab -p /mnt >> /mnt/etc/fstab
+            arch-chroot /mnt
+                System konfigurieren:
+                    Hostnamen in /etc/hostname eintragen
+                    Spracheinstellungen in /etc/locale.conf ergänzen
+                    /usr/share/zoneinfo/ZONE/ORT nach /etc/localtime symlinken (Zone/Ort anpassen).
+                    Gewünschte Sprachen in /etc/locale.gen auskommentieren, anschließend mit: locale-gen erzeugen
+                mkinitcpio über /etc/mkinitcpio.conf konfigurieren
+                Kernel-Image erzeugen: mkinitcpio -p linux
+                Passwort für root anlegen: passwd
+                Tastaturlayout permanent speichern: /etc/vconsole.conf editieren
+
+    Bootloader konfigurieren und einrichten
+
+            syslinux
+                pacman -S syslinux
+                syslinux-install_update -i -a -m (installiert syslinux in den MBR von sda)
+                /boot/syslinux/syslinux.cfg anpassen (v.a. die Append-Zeile mit root=..., insbesondere prüfen, ob die richtige boot-Partition verwendet wird)
+            grub
+
+    chroot verlassen (exit)
+    Partitionen aushängen (umount /mnt/{…})
+    Neu starten
